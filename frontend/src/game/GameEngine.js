@@ -70,6 +70,7 @@ class Bot {
     this.pauseTimer = randomInRange(40, 100);
     this.hooked = false;
     this.alive = true;
+    this.lastAngle = Math.PI;
     // Bot hook state
     this.hook = {
       x: 0, y: 0,
@@ -109,6 +110,7 @@ class Bot {
       if (d > 2) {
         this.x += (dx / d) * BOT_SPEED;
         this.y += (dy / d) * BOT_SPEED;
+        this.lastAngle = Math.atan2(dy, dx) + Math.PI / 2;
       }
       if (this.moveTimer <= 0) {
         this.pauseTimer = randomInRange(40, 120);
@@ -168,6 +170,7 @@ export class GameEngine {
       radius: PLAYER_RADIUS,
       targetX: CANVAS_W / 2,
       targetY: CANVAS_H - 80,
+      lastAngle: 0,
     };
 
     this.hook = {
@@ -252,6 +255,7 @@ export class GameEngine {
     if (d > 2) {
       p.x += (dx / d) * PLAYER_SPEED;
       p.y += (dy / d) * PLAYER_SPEED;
+      p.lastAngle = Math.atan2(dy, dx) + Math.PI / 2;
     }
     // Enforce bounds (below river)
     const minY = RIVER_Y + RIVER_H + p.radius;
@@ -550,11 +554,7 @@ export class GameEngine {
     ctx.fill();
 
     if (this.spriteLoaded) {
-      // Angle toward movement target
-      const dx = p.targetX - p.x;
-      const dy = p.targetY - p.y;
-      const angle = Math.atan2(dy, dx) + Math.PI / 2;
-      this.drawSprite(ctx, this.sprite, p.x, p.y, SPRITE_SIZE_PLAYER, angle);
+      this.drawSprite(ctx, this.sprite, p.x, p.y, SPRITE_SIZE_PLAYER, p.lastAngle);
     } else {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
@@ -574,10 +574,7 @@ export class GameEngine {
       ctx.fill();
 
       if (this.spriteLoaded && this.botSprite) {
-        const dx = bot.targetX - bot.x;
-        const dy = bot.targetY - bot.y;
-        const angle = Math.atan2(dy, dx) + Math.PI / 2;
-        this.drawSprite(ctx, this.botSprite, bot.x, bot.y, SPRITE_SIZE_BOT, angle);
+        this.drawSprite(ctx, this.botSprite, bot.x, bot.y, SPRITE_SIZE_BOT, bot.lastAngle);
       } else {
         // Fallback circle
         ctx.beginPath();
