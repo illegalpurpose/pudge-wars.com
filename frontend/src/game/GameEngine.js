@@ -332,11 +332,15 @@ export class GameEngine {
   }
 
   updateBots() {
+    // Check if any bot already has an active hook
+    const anyBotHooking = this.bots.some(b => b.alive && b.hook.state !== HOOK_IDLE);
+
     for (const bot of this.bots) {
       bot.update();
       if (bot.alive && !bot.hooked) {
-        // Skip firing new hooks if player is already being dragged by another bot
         if (this.playerBeingDragged && bot.hook.state === HOOK_IDLE) continue;
+        // Only allow this bot to fire if no other bot is hooking
+        if (anyBotHooking && bot.hook.state === HOOK_IDLE) continue;
         this.updateBotHook(bot);
       }
     }
