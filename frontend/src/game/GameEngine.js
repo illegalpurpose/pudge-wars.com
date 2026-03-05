@@ -12,6 +12,8 @@ const BOT_RADIUS = 26;
 const SPRITE_SIZE_PLAYER = 64;
 const SPRITE_SIZE_BOT = 56;
 const PUDGE_SPRITE_URL = "/pudge_sprite.png";
+const HOOK_SPRITE_URL = "/hook_sprite.png";
+const HOOK_SPRITE_SIZE = 36;
 const HOOK_RADIUS = 8;
 const HOOK_SPEED = 12;
 const HOOK_RETURN_SPEED = 14;
@@ -88,6 +90,8 @@ class Bot {
 
   update() {
     if (this.hooked || !this.alive) return;
+    // Block movement while bot hook is active
+    if (this.hook.state !== HOOK_IDLE) return;
 
     if (this.pauseTimer > 0) {
       this.pauseTimer--;
@@ -148,6 +152,12 @@ export class GameEngine {
       this.botSprite = offCanvas;
     };
 
+    // Load hook sprite
+    this.hookSpriteLoaded = false;
+    this.hookSprite = new Image();
+    this.hookSprite.onload = () => { this.hookSpriteLoaded = true; };
+    this.hookSprite.src = HOOK_SPRITE_URL;
+
     this.reset();
   }
 
@@ -190,6 +200,8 @@ export class GameEngine {
 
   onRightClick(canvasX, canvasY) {
     if (this.victory) return;
+    // Block movement while hook is active
+    if (this.hook.state !== HOOK_IDLE) return;
     // Set player move target (bottom half only, can't cross river)
     const minY = RIVER_Y + RIVER_H + this.player.radius;
     this.player.targetX = clamp(canvasX, this.player.radius, CANVAS_W - this.player.radius);
@@ -230,6 +242,8 @@ export class GameEngine {
 
   updatePlayer() {
     const p = this.player;
+    // Block movement while hook is active
+    if (this.hook.state !== HOOK_IDLE) return;
     const dx = p.targetX - p.x;
     const dy = p.targetY - p.y;
     const d = Math.sqrt(dx * dx + dy * dy);
@@ -439,11 +453,8 @@ export class GameEngine {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Hook head
-      ctx.beginPath();
-      ctx.arc(h.x, h.y, HOOK_RADIUS, 0, Math.PI * 2);
-      ctx.fillStyle = COL_BOT_HOOK;
-      ctx.fill();
+      // Hook head sprite
+      this.drawHookSprite(ctx, h.x, h.y, bot.x, bot.y);
 
       // Glow
       ctx.beginPath();
@@ -568,6 +579,24 @@ export class GameEngine {
     }
   }
 
+  drawHookSprite(ctx, x, y, fromX, fromY) {
+    if (this.hookSpriteLoaded) {
+      ctx.save();
+      ctx.translate(x, y);
+      // Rotate hook to face direction of travel
+      const angle = Math.atan2(y - fromY, x - fromX) + Math.PI / 2;
+      ctx.rotate(angle);
+      ctx.drawImage(this.hookSprite, -HOOK_SPRITE_SIZE / 2, -HOOK_SPRITE_SIZE / 2, HOOK_SPRITE_SIZE, HOOK_SPRITE_SIZE);
+      ctx.restore();
+    } else {
+      // Fallback circle
+      ctx.beginPath();
+      ctx.arc(x, y, HOOK_RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = COL_HOOK;
+      ctx.fill();
+    }
+  }
+
   drawHook(ctx) {
     const h = this.hook;
     if (h.state === HOOK_IDLE) return;
@@ -582,17 +611,8 @@ export class GameEngine {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Hook head
-    ctx.beginPath();
-    ctx.arc(h.x, h.y, HOOK_RADIUS, 0, Math.PI * 2);
-    ctx.fillStyle = COL_HOOK;
-    ctx.fill();
-
-    // Hook glow
-    ctx.beginPath();
-    ctx.arc(h.x, h.y, HOOK_RADIUS + 4, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,255,255,0.15)";
-    ctx.fill();
+    // Hook head sprite
+    this.drawHookSprite(ctx, h.x, h.y, this.player.x, this.player.y);
   }
 
   drawHUD(ctx) {
