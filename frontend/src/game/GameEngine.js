@@ -338,6 +338,9 @@ export class GameEngine {
         if (!bot.alive || bot.hooked) continue;
         if (dist(h, bot) < HOOK_RADIUS + bot.radius) {
           bot.hooked = true;
+          // Reset bot's own hook
+          bot.hook.state = HOOK_IDLE;
+          bot.hook.grabbedPlayer = false;
           h.grabbedBot = bot;
           h.state = HOOK_DRAGGING;
           break;
