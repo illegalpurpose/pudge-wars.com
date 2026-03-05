@@ -303,6 +303,14 @@ export class GameEngine {
       if (this.blinkEffect.timer <= 0) this.blinkEffect = null;
     }
 
+    // Safety: fix orphaned hooked bots (hooked but nobody is dragging them)
+    const draggedBot = this.hook.state === HOOK_DRAGGING ? this.hook.grabbedBot : null;
+    for (const bot of this.bots) {
+      if (bot.hooked && bot !== draggedBot) {
+        bot.hooked = false;
+      }
+    }
+
     this.updatePlayer();
     this.updateHook();
     this.updateBots();
@@ -352,6 +360,16 @@ export class GameEngine {
           // Reset bot's own hook
           bot.hook.state = HOOK_IDLE;
           bot.hook.grabbedPlayer = false;
+          // If player was being dragged by another bot, cancel that drag
+          if (this.playerBeingDragged) {
+            for (const b of this.bots) {
+              if (b.hook.grabbedPlayer) {
+                b.hook.grabbedPlayer = false;
+                b.hook.state = HOOK_IDLE;
+              }
+            }
+            this.playerBeingDragged = false;
+          }
           h.grabbedBot = bot;
           h.state = HOOK_DRAGGING;
           break;
@@ -463,6 +481,10 @@ export class GameEngine {
         h.grabbedPlayer = true;
         h.state = HOOK_DRAGGING;
         this.playerBeingDragged = true;
+        // Release any bot the player was dragging
+        if (this.hook.grabbedBot) {
+          this.hook.grabbedBot.hooked = false;
+        }
         // Reset player's own hook
         this.hook.state = HOOK_IDLE;
         this.hook.grabbedBot = null;
