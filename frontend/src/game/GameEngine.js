@@ -160,6 +160,17 @@ export class GameEngine {
     this.hookSprite.onload = () => { this.hookSpriteLoaded = true; };
     this.hookSprite.src = HOOK_SPRITE_URL;
 
+    // Load ability icons
+    this.iconHook = new Image();
+    this.iconHookLoaded = false;
+    this.iconHook.onload = () => { this.iconHookLoaded = true; };
+    this.iconHook.src = "/icon_hook.png";
+
+    this.iconBlink = new Image();
+    this.iconBlinkLoaded = false;
+    this.iconBlink.onload = () => { this.iconBlinkLoaded = true; };
+    this.iconBlink.src = "/icon_blink.png";
+
     this.reset();
   }
 
@@ -724,14 +735,14 @@ export class GameEngine {
 
     // Q — Hook
     const hookReady = this.hook.state === HOOK_IDLE && this.blinkCooldown <= 0 && !this.playerBeingDragged;
-    this.drawAbilityBox(ctx, barX, barY, boxSize, "Q", "Hook", hookReady, COL_PLAYER);
+    this.drawAbilityBox(ctx, barX, barY, boxSize, "Q", hookReady, COL_PLAYER, this.iconHookLoaded ? this.iconHook : null);
 
     // W — Blink
     const blinkReady = this.blinkCooldown <= 0 && this.hook.state === HOOK_IDLE && !this.playerBeingDragged;
-    this.drawAbilityBox(ctx, barX + boxSize + gap, barY, boxSize, "W", "Blink", blinkReady, "#9B59FF");
+    this.drawAbilityBox(ctx, barX + boxSize + gap, barY, boxSize, "W", blinkReady, "#9B59FF", this.iconBlinkLoaded ? this.iconBlink : null);
   }
 
-  drawAbilityBox(ctx, x, y, size, key, label, ready, color) {
+  drawAbilityBox(ctx, x, y, size, key, ready, color, icon) {
     // Background
     ctx.fillStyle = ready ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.5)";
     ctx.strokeStyle = ready ? color : "rgba(255,255,255,0.1)";
@@ -749,18 +760,22 @@ export class GameEngine {
       ctx.fill();
     }
 
-    // Key letter
-    ctx.font = "bold 22px 'Rajdhani', sans-serif";
+    // Icon
+    if (icon) {
+      ctx.save();
+      ctx.globalAlpha = ready ? 1 : 0.35;
+      const pad = 6;
+      const iconSize = size - pad * 2;
+      ctx.drawImage(icon, x + pad, y + pad, iconSize, iconSize);
+      ctx.restore();
+    }
+
+    // Key letter — small badge top-left
+    ctx.font = "bold 12px 'Rajdhani', sans-serif";
     ctx.fillStyle = ready ? color : "#555";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(key, x + size / 2, y + size / 2 - 4);
-
-    // Label below
-    ctx.font = "500 10px 'Rajdhani', sans-serif";
-    ctx.fillStyle = ready ? "#aaa" : "#444";
-    ctx.fillText(label, x + size / 2, y + size - 6);
-
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText(key, x + 4, y + 2);
     ctx.textBaseline = "alphabetic";
   }
 
