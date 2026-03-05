@@ -715,6 +715,53 @@ export class GameEngine {
     ctx.fillStyle = COL_PLAYER;
     ctx.textAlign = "left";
     ctx.fillText(`Score: ${this.score} / ${MAX_SCORE}`, 20, 34);
+
+    // Ability bar — bottom-left
+    const barX = 16;
+    const barY = CANVAS_H - 70;
+    const boxSize = 50;
+    const gap = 10;
+
+    // Q — Hook
+    const hookReady = this.hook.state === HOOK_IDLE && this.blinkCooldown <= 0 && !this.playerBeingDragged;
+    this.drawAbilityBox(ctx, barX, barY, boxSize, "Q", "Hook", hookReady, COL_PLAYER);
+
+    // W — Blink
+    const blinkReady = this.blinkCooldown <= 0 && this.hook.state === HOOK_IDLE && !this.playerBeingDragged;
+    this.drawAbilityBox(ctx, barX + boxSize + gap, barY, boxSize, "W", "Blink", blinkReady, "#9B59FF");
+  }
+
+  drawAbilityBox(ctx, x, y, size, key, label, ready, color) {
+    // Background
+    ctx.fillStyle = ready ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.5)";
+    ctx.strokeStyle = ready ? color : "rgba(255,255,255,0.1)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x, y, size, size, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    // Cooldown overlay
+    if (!ready) {
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.beginPath();
+      ctx.roundRect(x, y, size, size, 6);
+      ctx.fill();
+    }
+
+    // Key letter
+    ctx.font = "bold 22px 'Rajdhani', sans-serif";
+    ctx.fillStyle = ready ? color : "#555";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(key, x + size / 2, y + size / 2 - 4);
+
+    // Label below
+    ctx.font = "500 10px 'Rajdhani', sans-serif";
+    ctx.fillStyle = ready ? "#aaa" : "#444";
+    ctx.fillText(label, x + size / 2, y + size - 6);
+
+    ctx.textBaseline = "alphabetic";
   }
 
   drawVictory(ctx) {
