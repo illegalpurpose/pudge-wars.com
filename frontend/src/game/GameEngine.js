@@ -28,7 +28,7 @@ const COL_BOT_HOOK = "#FF6644";
 const COL_BOT_HOOK_CHAIN = "rgba(255,100,68,0.6)";
 
 const MAX_SCORE = 15;
-const BOT_COUNT = 3;
+const BOT_COUNT = 4;
 
 // Colors
 const COL_GRASS_TOP = "#2d5a1e";
@@ -190,6 +190,7 @@ export class GameEngine {
     this.victory = false;
     this.mouseX = CANVAS_W / 2;
     this.mouseY = 0;
+    this.playerBeingDragged = false;
   }
 
   // --- Input handlers ---
@@ -200,8 +201,8 @@ export class GameEngine {
 
   onRightClick(canvasX, canvasY) {
     if (this.victory) return;
-    // Block movement while hook is active
     if (this.hook.state !== HOOK_IDLE) return;
+    if (this.playerBeingDragged) return;
     // Set player move target (bottom half only, can't cross river)
     const minY = RIVER_Y + RIVER_H + this.player.radius;
     this.player.targetX = clamp(canvasX, this.player.radius, CANVAS_W - this.player.radius);
@@ -211,6 +212,7 @@ export class GameEngine {
   onHook() {
     if (this.victory) return;
     if (this.hook.state !== HOOK_IDLE) return;
+    if (this.playerBeingDragged) return;
 
     const dx = this.mouseX - this.player.x;
     const dy = this.mouseY - this.player.y;
@@ -333,6 +335,8 @@ export class GameEngine {
     for (const bot of this.bots) {
       bot.update();
       if (bot.alive && !bot.hooked) {
+        // Skip firing new hooks if player is already being dragged by another bot
+        if (this.playerBeingDragged && bot.hook.state === HOOK_IDLE) continue;
         this.updateBotHook(bot);
       }
     }
@@ -343,6 +347,7 @@ export class GameEngine {
 
     // Cooldown & fire logic
     if (h.state === HOOK_IDLE) {
+      if (this.playerBeingDragged) return;
       bot.hookCooldown--;
       if (bot.hookCooldown <= 0) {
         // Fire hook toward player
@@ -381,6 +386,7 @@ export class GameEngine {
       if (dist(h, this.player) < HOOK_RADIUS + this.player.radius) {
         h.grabbedPlayer = true;
         h.state = HOOK_DRAGGING;
+        this.playerBeingDragged = true;
       }
     }
 
@@ -406,6 +412,7 @@ export class GameEngine {
         this.score = 0;
         h.grabbedPlayer = false;
         h.state = HOOK_IDLE;
+        this.playerBeingDragged = false;
         // Push player back to starting position
         this.player.x = CANVAS_W / 2;
         this.player.y = CANVAS_H - 80;
