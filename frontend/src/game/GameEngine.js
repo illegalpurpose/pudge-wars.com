@@ -875,16 +875,19 @@ export class GameEngine {
   drawPlayer(ctx) {
     const p = this.player;
 
-    // Invisibility visual: flickering ghost
+    // Invisibility visual: semi-transparent with shimmer
     if (this.invisible) {
-      const flicker = 0.15 + Math.sin(Date.now() * 0.015) * 0.1;
-      ctx.globalAlpha = flicker;
+      const pulse = 0.35 + Math.sin(Date.now() * 0.012) * 0.1;
+      ctx.globalAlpha = pulse;
 
-      // Shimmer glow
+      // Shimmer ring around player so position is always visible
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius + 14, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(100,180,255,0.15)";
-      ctx.fill();
+      ctx.arc(p.x, p.y, p.radius + 16, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(100,180,255,0.5)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
 
     // Glow under sprite
