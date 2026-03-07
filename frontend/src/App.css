@@ -30,6 +30,7 @@
 }
 
 .game-wrapper {
+    min-width: 100vw;
     position: relative;
     z-index: 10;
     border-radius: 8px;
