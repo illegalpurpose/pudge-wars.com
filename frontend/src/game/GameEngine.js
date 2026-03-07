@@ -239,6 +239,7 @@ export class GameEngine {
 
   onRightClick(canvasX, canvasY) {
     if (this.gameOver) return;
+    if (this.invisible) return;
     if (this.hook.state !== HOOK_IDLE) return;
     if (this.playerBeingDragged) return;
     // Set player move target (bottom half only, can't cross river)
@@ -259,6 +260,7 @@ export class GameEngine {
 
   onHook() {
     if (this.gameOver) return;
+    if (this.invisible) return;
     if (this.hook.state !== HOOK_IDLE) return;
     if (this.playerBeingDragged) return;
     if (this.blinkCooldown > 0) return;
@@ -286,6 +288,7 @@ export class GameEngine {
 
   onBlink() {
     if (this.gameOver) return;
+    if (this.invisible) return;
     if (this.hook.state !== HOOK_IDLE) return;
     if (this.playerBeingDragged) return;
     if (this.blinkCooldown > 0) return;
@@ -381,7 +384,8 @@ export class GameEngine {
 
   updatePlayer(dt) {
     const p = this.player;
-    // Block movement while hook is active
+    // Block movement while phased out or hook is active
+    if (this.invisible) return;
     if (this.hook.state !== HOOK_IDLE) return;
     const dx = p.targetX - p.x;
     const dy = p.targetY - p.y;
@@ -875,19 +879,32 @@ export class GameEngine {
   drawPlayer(ctx) {
     const p = this.player;
 
-    // Invisibility visual: semi-transparent with shimmer
+    // Phased out: player removed from world, show only ethereal marker
     if (this.invisible) {
-      const pulse = 0.35 + Math.sin(Date.now() * 0.012) * 0.1;
-      ctx.globalAlpha = pulse;
-
-      // Shimmer ring around player so position is always visible
+      const pulse = 0.3 + Math.sin(Date.now() * 0.01) * 0.15;
+      // Swirling particles at player position
+      ctx.save();
+      const time = Date.now() * 0.003;
+      for (let i = 0; i < 6; i++) {
+        const angle = time + (i * Math.PI * 2) / 6;
+        const r = 12 + Math.sin(time * 2 + i) * 5;
+        const px = p.x + Math.cos(angle) * r;
+        const py = p.y + Math.sin(angle) * r;
+        ctx.globalAlpha = pulse * 0.7;
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.fillStyle = "#4A9EFF";
+        ctx.fill();
+      }
+      // Center glow
+      ctx.globalAlpha = pulse * 0.4;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius + 16, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(100,180,255,0.5)";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(74,158,255,0.3)";
+      ctx.fill();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      return;
     }
 
     // Glow under sprite
