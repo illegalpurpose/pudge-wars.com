@@ -213,6 +213,7 @@ export class GameEngine {
     this.playerBeingDragged = false;
     this.blinkCooldown = 0;
     this.blinkEffect = null;
+    this.clickEffects = [];
   }
 
   // --- Input handlers ---
@@ -227,8 +228,18 @@ export class GameEngine {
     if (this.playerBeingDragged) return;
     // Set player move target (bottom half only, can't cross river)
     const minY = RIVER_Y + RIVER_H + this.player.radius;
-    this.player.targetX = clamp(canvasX, this.player.radius, CANVAS_W - this.player.radius);
-    this.player.targetY = clamp(canvasY, minY, CANVAS_H - this.player.radius);
+    const tx = clamp(canvasX, this.player.radius, CANVAS_W - this.player.radius);
+    const ty = clamp(canvasY, minY, CANVAS_H - this.player.radius);
+    this.player.targetX = tx;
+    this.player.targetY = ty;
+
+    // Spawn click animation at target location
+    this.clickEffects.push({
+      x: tx,
+      y: ty,
+      timer: 20,      // total lifetime in frames (at 60fps)
+      maxTimer: 20,
+    });
   }
 
   onHook() {
@@ -320,6 +331,16 @@ export class GameEngine {
     this.updatePlayer(dt);
     this.updateHook(dt);
     this.updateBots(dt);
+    this.updateClickEffects(dt);
+  }
+
+  updateClickEffects(dt) {
+    for (let i = this.clickEffects.length - 1; i >= 0; i--) {
+      this.clickEffects[i].timer -= dt;
+      if (this.clickEffects[i].timer <= 0) {
+        this.clickEffects.splice(i, 1);
+      }
+    }
   }
 
   updatePlayer(dt) {
@@ -532,6 +553,7 @@ export class GameEngine {
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     this.drawGround(ctx);
     this.drawRiver(ctx);
+    this.drawClickEffects(ctx);
     this.drawBotHooks(ctx);
     this.drawBots(ctx);
     this.drawHook(ctx);
@@ -544,6 +566,49 @@ export class GameEngine {
     }
     if (this.defeat) {
       this.drawDefeat(ctx);
+    }
+  }
+
+  drawClickEffects(ctx) {
+    for (const e of this.clickEffects) {
+      const progress = 1 - (e.timer / e.maxTimer); // 0 -> 1
+      const alpha = 1 - progress; // fade out
+
+      // Expanding outer ring
+      const outerR = 6 + progress * 14;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, outerR, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(0,255,204,${alpha * 0.7})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Inner shrinking dot
+      const innerR = 3 * (1 - progress);
+      if (innerR > 0.5) {
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, innerR, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,255,204,${alpha * 0.9})`;
+        ctx.fill();
+      }
+
+      // Small cross lines
+      const crossSize = 5 + progress * 3;
+      ctx.globalAlpha = alpha * 0.5;
+      ctx.strokeStyle = COL_PLAYER;
+      ctx.lineWidth = 1;
+      // horizontal
+      ctx.beginPath();
+      ctx.moveTo(e.x - crossSize, e.y);
+      ctx.lineTo(e.x - crossSize + 3, e.y);
+      ctx.moveTo(e.x + crossSize - 3, e.y);
+      ctx.lineTo(e.x + crossSize, e.y);
+      // vertical
+      ctx.moveTo(e.x, e.y - crossSize);
+      ctx.lineTo(e.x, e.y - crossSize + 3);
+      ctx.moveTo(e.x, e.y + crossSize - 3);
+      ctx.lineTo(e.x, e.y + crossSize);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
     }
   }
 
