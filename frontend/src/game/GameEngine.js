@@ -88,13 +88,13 @@ class Bot {
     this.pauseTimer = 0;
   }
 
-  update() {
+  update(dt) {
     if (this.hooked || !this.alive) return;
     // Block movement while bot hook is active
     if (this.hook.state !== HOOK_IDLE) return;
 
     if (this.pauseTimer > 0) {
-      this.pauseTimer--;
+      this.pauseTimer -= dt;
       if (this.pauseTimer <= 0) {
         this.pickNewTarget();
       }
@@ -102,13 +102,13 @@ class Bot {
     }
 
     if (this.moveTimer > 0) {
-      this.moveTimer--;
+      this.moveTimer -= dt;
       const dx = this.targetX - this.x;
       const dy = this.targetY - this.y;
       const d = Math.sqrt(dx * dx + dy * dy);
       if (d > 2) {
-        this.x += (dx / d) * BOT_SPEED;
-        this.y += (dy / d) * BOT_SPEED;
+        this.x += (dx / d) * BOT_SPEED * dt;
+        this.y += (dy / d) * BOT_SPEED * dt;
         this.lastAngle = Math.atan2(dy, dx) - Math.PI / 2;
       }
       if (this.moveTimer <= 0) {
@@ -295,12 +295,12 @@ export class GameEngine {
   }
 
   // --- Update ---
-  update() {
+  update(dt) {
     if (this.gameOver) return;
 
-    if (this.blinkCooldown > 0) this.blinkCooldown--;
+    if (this.blinkCooldown > 0) this.blinkCooldown -= dt;
     if (this.blinkEffect) {
-      this.blinkEffect.timer--;
+      this.blinkEffect.timer -= dt;
       if (this.blinkEffect.timer <= 0) this.blinkEffect = null;
     }
 
@@ -312,12 +312,12 @@ export class GameEngine {
       }
     }
 
-    this.updatePlayer();
-    this.updateHook();
-    this.updateBots();
+    this.updatePlayer(dt);
+    this.updateHook(dt);
+    this.updateBots(dt);
   }
 
-  updatePlayer() {
+  updatePlayer(dt) {
     const p = this.player;
     // Block movement while hook is active
     if (this.hook.state !== HOOK_IDLE) return;
@@ -325,8 +325,8 @@ export class GameEngine {
     const dy = p.targetY - p.y;
     const d = Math.sqrt(dx * dx + dy * dy);
     if (d > 2) {
-      p.x += (dx / d) * PLAYER_SPEED;
-      p.y += (dy / d) * PLAYER_SPEED;
+      p.x += (dx / d) * PLAYER_SPEED * dt;
+      p.y += (dy / d) * PLAYER_SPEED * dt;
       p.lastAngle = Math.atan2(dy, dx) - Math.PI / 2;
     }
     // Enforce bounds (below river)
@@ -335,12 +335,12 @@ export class GameEngine {
     p.y = clamp(p.y, minY, CANVAS_H - p.radius);
   }
 
-  updateHook() {
+  updateHook(dt) {
     const h = this.hook;
 
     if (h.state === HOOK_FLYING) {
-      h.x += h.vx;
-      h.y += h.vy;
+      h.x += h.vx * dt;
+      h.y += h.vy * dt;
 
       // Check max distance
       const d = dist(h, { x: h.startX, y: h.startY });
@@ -385,8 +385,8 @@ export class GameEngine {
       if (d < 10) {
         h.state = HOOK_IDLE;
       } else {
-        h.x += (dx / d) * HOOK_RETURN_SPEED;
-        h.y += (dy / d) * HOOK_RETURN_SPEED;
+        h.x += (dx / d) * HOOK_RETURN_SPEED * dt;
+        h.y += (dy / d) * HOOK_RETURN_SPEED * dt;
       }
     }
 
@@ -407,8 +407,8 @@ export class GameEngine {
         bot.respawn();
         bot.alive = true;
       } else {
-        h.x += (dx / d) * HOOK_RETURN_SPEED;
-        h.y += (dy / d) * HOOK_RETURN_SPEED;
+        h.x += (dx / d) * HOOK_RETURN_SPEED * dt;
+        h.y += (dy / d) * HOOK_RETURN_SPEED * dt;
         // Drag bot along
         bot.x = h.x;
         bot.y = h.y;
@@ -416,28 +416,28 @@ export class GameEngine {
     }
   }
 
-  updateBots() {
+  updateBots(dt) {
     // Check if any bot already has an active hook
     const anyBotHooking = this.bots.some(b => b.alive && b.hook.state !== HOOK_IDLE);
 
     for (const bot of this.bots) {
-      bot.update();
+      bot.update(dt);
       if (bot.alive && !bot.hooked) {
         if (this.playerBeingDragged && bot.hook.state === HOOK_IDLE) continue;
         // Only allow this bot to fire if no other bot is hooking
         if (anyBotHooking && bot.hook.state === HOOK_IDLE) continue;
-        this.updateBotHook(bot);
+        this.updateBotHook(bot, dt);
       }
     }
   }
 
-  updateBotHook(bot) {
+  updateBotHook(bot, dt) {
     const h = bot.hook;
 
     // Cooldown & fire logic
     if (h.state === HOOK_IDLE) {
       if (this.playerBeingDragged) return;
-      bot.hookCooldown--;
+      bot.hookCooldown -= dt;
       if (bot.hookCooldown <= 0) {
         // Fire hook toward player
         const dx = this.player.x - bot.x;
@@ -461,8 +461,8 @@ export class GameEngine {
     }
 
     if (h.state === HOOK_FLYING) {
-      h.x += h.vx;
-      h.y += h.vy;
+      h.x += h.vx * dt;
+      h.y += h.vy * dt;
 
       // Max distance
       const d = dist(h, { x: h.startX, y: h.startY });
@@ -495,8 +495,8 @@ export class GameEngine {
       if (d < 10) {
         h.state = HOOK_IDLE;
       } else {
-        h.x += (dx / d) * BOT_HOOK_RETURN_SPEED;
-        h.y += (dy / d) * BOT_HOOK_RETURN_SPEED;
+        h.x += (dx / d) * BOT_HOOK_RETURN_SPEED * dt;
+        h.y += (dy / d) * BOT_HOOK_RETURN_SPEED * dt;
       }
     }
 
@@ -513,8 +513,8 @@ export class GameEngine {
         h.state = HOOK_IDLE;
         this.playerBeingDragged = false;
       } else {
-        h.x += (dx / d) * BOT_HOOK_RETURN_SPEED;
-        h.y += (dy / d) * BOT_HOOK_RETURN_SPEED;
+        h.x += (dx / d) * BOT_HOOK_RETURN_SPEED * dt;
+        h.y += (dy / d) * BOT_HOOK_RETURN_SPEED * dt;
         // Drag player along
         this.player.x = h.x;
         this.player.y = h.y;

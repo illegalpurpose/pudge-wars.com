@@ -1,18 +1,30 @@
 import { useEffect, useRef, useCallback } from "react";
 import { GameEngine } from "@/game/GameEngine";
 
+const TARGET_FRAME_MS = 1000 / 60; // 60fps target
+
 export const PudgeWarsGame = () => {
     const canvasRef = useRef(null);
     const engineRef = useRef(null);
     const rafRef = useRef(null);
+    const lastTimeRef = useRef(null);
 
-    const gameLoop = useCallback(() => {
+    const gameLoop = useCallback((currentTime) => {
         const engine = engineRef.current;
         const canvas = canvasRef.current;
         if (!engine || !canvas) return;
 
+        // Calculate normalized delta time (1.0 = one frame at 60fps)
+        if (lastTimeRef.current === null) {
+            lastTimeRef.current = currentTime;
+        }
+        const elapsed = currentTime - lastTimeRef.current;
+        lastTimeRef.current = currentTime;
+        // Normalize: dt=1.0 at 60fps, dt=2.0 at 30fps, dt=0.5 at 120fps
+        const dt = Math.min(elapsed / TARGET_FRAME_MS, 3); // cap at 3 to avoid huge jumps
+
         const ctx = canvas.getContext("2d");
-        engine.update();
+        engine.update(dt);
         engine.render(ctx);
 
         rafRef.current = requestAnimationFrame(gameLoop);
