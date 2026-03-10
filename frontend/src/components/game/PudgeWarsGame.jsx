@@ -129,21 +129,21 @@ export const PudgeWarsGame = () => {
             >
                 <div className="banner">
                     <a
-                        href="/#/go/partner"
+                        href="/go/partner"
                         rel="sponsored nofollow"
                         target="_blank"
                     >
                         <img src="/PUDGEWARS_1.jpeg" />
                     </a>
                     <a
-                        href="/#/go/partner"
+                        href="/go/partner"
                         rel="sponsored nofollow"
                         target="_blank"
                     >
                         <img src="/PUDGEWARS_2.jpeg" />
                     </a>
                     <a
-                        href="/#/go/partner"
+                        href="/go/partner"
                         rel="sponsored nofollow"
                         target="_blank"
                     >
@@ -157,21 +157,21 @@ export const PudgeWarsGame = () => {
                 />
                 <div className="banner">
                     <a
-                        href="/#/go/partner"
+                        href="/go/partner"
                         rel="sponsored nofollow"
                         target="_blank"
                     >
                         <img src="/PUDGEWARS_2.jpeg" />
                     </a>
                     <a
-                        href="/#/go/partner"
+                        href="/go/partner"
                         rel="sponsored nofollow"
                         target="_blank"
                     >
                         <img src="/PUDGEWARS_1.jpeg" />
                     </a>
                     <a
-                        href="/#/go/partner"
+                        href="/go/partner"
                         rel="sponsored nofollow"
                         target="_blank"
                     >
