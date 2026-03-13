@@ -128,27 +128,11 @@ export const PudgeWarsGame = () => {
                 data-testid="game-wrapper"
             >
                 <div className="banner">
-                    <a
-                        href="/go/partner"
-                        rel="sponsored nofollow"
-                        target="_blank"
-                    >
-                        <img src="/PUDGEWARS_1.jpeg" />
-                    </a>
-                    <a
-                        href="/go/partner"
-                        rel="sponsored nofollow"
-                        target="_blank"
-                    >
-                        <img src="/PUDGEWARS_2.jpeg" />
-                    </a>
-                    <a
-                        href="/go/partner"
-                        rel="sponsored nofollow"
-                        target="_blank"
-                    >
-                        <img src="/PUDGEWARS_3.jpeg" />
-                    </a>
+                    <img className="banner_img" src="/crypto_1.jpg" />
+
+                    <img className="banner_img" src="/crypto_2.jpg" />
+
+                    <img className="banner_img" src="/crypto_3.jpg" />
                 </div>
                 <canvas
                     ref={canvasRef}
@@ -156,27 +140,11 @@ export const PudgeWarsGame = () => {
                     data-testid="game-canvas"
                 />
                 <div className="banner">
-                    <a
-                        href="/go/partner"
-                        rel="sponsored nofollow"
-                        target="_blank"
-                    >
-                        <img src="/PUDGEWARS_2.jpeg" />
-                    </a>
-                    <a
-                        href="/go/partner"
-                        rel="sponsored nofollow"
-                        target="_blank"
-                    >
-                        <img src="/PUDGEWARS_1.jpeg" />
-                    </a>
-                    <a
-                        href="/go/partner"
-                        rel="sponsored nofollow"
-                        target="_blank"
-                    >
-                        <img src="/PUDGEWARS_3.jpeg" />
-                    </a>
+                    <img className="banner_img" src="/crypto_4.jpg" />
+
+                    <img className="banner_img" src="/crypto_5.jpg" />
+
+                    <img className="banner_img" src="/crypto_6.jpg" />
                 </div>
             </div>
         </div>
