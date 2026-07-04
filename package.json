@@ -1,0 +1,25 @@
+{
+    "name": "pudge-wars",
+    "version": "1.0.0",
+    "homepage": "https://pudge-wars.com",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "predeploy": "npm run build",
+        "deploy": "gh-pages -d build",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "next": "^15.0.0",
+        "phaser": "^3.80.1",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "devDependencies": {
+        "eslint": "^9.23.0",
+        "eslint-config-next": "^15.0.0",
+        "gh-pages": "^6.3.0"
+    }
+}
